@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { useFormWithValidation } from '@/hooks/useFormWithValidation'
+import { useFormWithValidation } from '@/hooks/useRHFGoodForm'
 
 interface FormValues {
   email: string

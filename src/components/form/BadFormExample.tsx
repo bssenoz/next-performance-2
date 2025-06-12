@@ -1,50 +1,35 @@
 'use client'
 
-import React, { useState } from 'react';
-import { useForm, useController, FormProvider } from 'react-hook-form';
+import React, { memo } from 'react';
+import { useForm, FormProvider } from 'react-hook-form';
+import { useBadForm, SELECT_OPTIONS } from '@/hooks/useBadForm';
 
-// ❌ Her render'da yeniden oluşturulan dizi - performans kaybına neden olur
-// ❌ Statik bir dizi olmalı ve component dışında tanımlanmalı
-const options = Array.from({ length: 2 }, (_, i) => `Option ${i + 1}`);
-
-// ❌ Gereksiz yerel state kullanımı
-// ❌ Form state'i zaten react-hook-form tarafından yönetiliyor, ekstra state gereksiz
-const BadSelect = ({ field }: { field: any }) => {
-  const [localValue, setLocalValue] = useState(field.value);
-  
+// Optimize Select component with memo and proper key usage
+const BadSelect = memo(({ field }: { field: any }) => {
   return (
     <select 
       {...field} 
-      value={localValue}
-      onChange={(e) => {
-        setLocalValue(e.target.value);
-        field.onChange(e);
-      }}
       className="border p-2 rounded"
     >
       <option value="">Select...</option>
-      {options.map(opt => (
-        // ❌ Random key usage
-        <option key={Math.random()} value={opt}>{opt}</option>
+      {SELECT_OPTIONS.map(opt => (
+        <option key={opt} value={opt}>{opt}</option>
       ))}
     </select>
   );
-};
+});
 
-// ❌ Her render'da yeni bir callback oluşturuluyor
-// ❌ useCallback ile memoize edilmeli veya component dışına alınmalı
+BadSelect.displayName = 'BadSelect';
+
 const BadInputGroup = () => {
+  const { handleInputChange } = useBadForm();
   const { register } = useForm();
-  
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log(e.target.value);
-  };
 
   return (
     <div className="space-y-2">
       <input
         {...register("example")}
-        onChange={handleChange}
+        onChange={handleInputChange}
         className="border p-2 rounded"
         placeholder="Bad subscription example"
       />
@@ -52,27 +37,14 @@ const BadInputGroup = () => {
   );
 };
 
-// ❌ Verimsiz watch kullanımı
-// ❌ Her değişiklikte tüm component yeniden render olur
-// ❌ useWatch hook'u kullanılmalı ve hesaplamalar useMemo ile optimize edilmeli
 const BadWatchExample = () => {
-  const { control, watch } = useForm({
-    defaultValues: {
-      quantity: 0
-    }
-  });
-
-  const quantity = watch("quantity");
-  const total = quantity * 5;
+  const { selectField: { field }, total } = useBadForm();
 
   return (
     <div className="space-y-2">
       <input
         type="number"
-        {...useController({
-          name: "quantity",
-          control
-        }).field}
+        {...field}
         className="border p-2 rounded"
       />
       <p className="text-sm">Calculated Total (5x): {total}</p>
@@ -80,23 +52,8 @@ const BadWatchExample = () => {
   );
 };
 
-// ❌ Ana form bileşeni - performans sorunları:
-// ❌ 1. Gereksiz controlled input kullanımı - uncontrolled kullanılmalı
-// ❌ 2. Select bileşeni memo edilmemiş
-// ❌ 3. FormProvider gereksiz yere her alt bileşen için yeniden oluşturuluyor
-// ❌ 4. Watch kullanımı optimize edilmemiş
 const BadFormExample = () => {
-  const { register, control, handleSubmit } = useForm({
-    defaultValues: {
-      controlled: "",
-      select: "",
-    }
-  });
-
-  const { field } = useController({
-    name: "select",
-    control,
-  });
+  const { register, selectField, handleSubmit } = useBadForm();
 
   return (
     <div className="space-y-6 p-4 border rounded-lg bg-white shadow text-black">
@@ -109,15 +66,12 @@ const BadFormExample = () => {
             type="text"
             className="border p-2 rounded w-full"
             {...register("controlled")}
-            onChange={(e) => {
-              field.onChange(e);
-            }}
           />
         </div>
 
         <div>
           <h3 className="font-semibold mb-2">2. Bad Select</h3>
-          <BadSelect field={field} />
+          <BadSelect field={selectField.field} />
         </div>
 
         <div>

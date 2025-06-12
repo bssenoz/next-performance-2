@@ -3,8 +3,8 @@
 import React, { useMemo } from 'react';
 import { FormProvider, useForm, useController } from 'react-hook-form';
 import { debounce } from 'lodash';
-import { useFormFields } from '@/hooks/useFormFields';
-import { useFormCalculations } from '@/hooks/useFormCalculations';
+import { useFormFields } from '@/hooks/goodForm/useFormFields';
+import { useFormCalculations } from '@/hooks/goodForm/useFormCalculations';
 
 // ✅ React.memo ile sarılmış select bileşeni
 // ✅ Sadece prop değişikliklerinde yeniden render olur
