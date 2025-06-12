@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import debounce from 'lodash/debounce';
+import React, { useRef, useEffect } from 'react';
+import { useSearch } from '@/hooks/useSearch';
 
 interface SearchResult {
   id: number;
@@ -13,40 +13,24 @@ interface MemoizedSearchProps {
 }
 
 const MemoizedSearch: React.FC<MemoizedSearchProps> = React.memo(({ items, onSearch }) => {
-  const [searchQuery, setSearchQuery] = useState('');
   const renderCount = useRef(0);
 
+  // Render sayısını takip et
   useEffect(() => {
     renderCount.current += 1;
     console.log('MemoizedSearch render oldu:', renderCount.current, 'kez');
   });
 
-  // Debounce ile arama fonksiyonu - her tuş vuruşunda değil, yazma durduğunda arama yap
-  const debouncedSearch = useCallback(
-    debounce((query: string) => {
-      onSearch(query);
-    }, 300), // 300ms bekle - performans optimizasyonu
-    [onSearch]
-  );
-
-  // Input değişikliğini yönet
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const query = e.target.value;
-    setSearchQuery(query);
-    debouncedSearch(query); // Debounce'lu arama fonksiyonunu çağır
-  };
-
-  // Filtrelenmiş sonuçları memoize et - aynı arama terimi için tekrar hesaplama yapma
-  const filteredResults = useMemo(() => {
-    if (!searchQuery.trim()) return items;
-    
-    const query = searchQuery.toLowerCase();
-    return items.filter(
-      item =>
-        item.title.toLowerCase().includes(query) ||
-        item.description.toLowerCase().includes(query)
-    );
-  }, [items, searchQuery]); // Sadece items veya searchQuery değiştiğinde yeniden hesapla
+  // Search hook'unu kullan
+  const {
+    searchQuery,
+    filteredResults,
+    handleSearch
+  } = useSearch({
+    items,
+    onSearch,
+    debounceTime: 300 // İsteğe bağlı, varsayılan değer 300ms
+  });
 
   return (
     <div className="p-4 border rounded-lg bg-white text-black">
@@ -67,7 +51,7 @@ const MemoizedSearch: React.FC<MemoizedSearchProps> = React.memo(({ items, onSea
           <input
             type="text"
             value={searchQuery}
-            onChange={handleInputChange}
+            onChange={handleSearch}
             placeholder="Ara..."
             className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />

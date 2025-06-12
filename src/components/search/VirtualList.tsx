@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useVirtualList } from '../../hooks/useVirtualList';
 
 interface VirtualListProps {
   items: string[];
@@ -7,31 +8,30 @@ interface VirtualListProps {
 }
 
 const VirtualList: React.FC<VirtualListProps> = React.memo(({ items, itemHeight, windowHeight }) => {
-  const [scrollTop, setScrollTop] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
   const renderCount = useRef(0);
 
+  // Render sayısını takip et
   useEffect(() => {
     renderCount.current += 1;
     console.log('VirtualList render oldu:', renderCount.current, 'kez');
   });
 
-  // Arama sonuçlarını memoize et - performans için
-  const filteredItems = useMemo(() => {
-    if (!searchQuery.trim()) return items;
-    const query = searchQuery.toLowerCase();
-    return items.filter(item => item.toLowerCase().includes(query));
-  }, [items, searchQuery]);
-
-  // Görünür öğeleri hesapla - sadece viewport'ta görünecek öğeleri render edeceğiz
-  const totalHeight = filteredItems.length * itemHeight;
-  const startIndex = Math.floor(scrollTop / itemHeight);
-  const visibleItemCount = Math.ceil(windowHeight / itemHeight);
-  const endIndex = Math.min(startIndex + visibleItemCount + 1, filteredItems.length);
-
-  // Sadece görünür öğeleri al - performans optimizasyonu için
-  const visibleItems = filteredItems.slice(startIndex, endIndex);
+  // Virtual list hook'unu kullan
+  const {
+    filteredItems,
+    visibleItems,
+    totalHeight,
+    startIndex,
+    scrollTop,
+    setScrollTop
+  } = useVirtualList({
+    items,
+    itemHeight,
+    windowHeight,
+    searchQuery
+  });
 
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
     setScrollTop(event.currentTarget.scrollTop);
@@ -57,7 +57,6 @@ const VirtualList: React.FC<VirtualListProps> = React.memo(({ items, itemHeight,
       </div>
 
       <div className="space-y-4">
-        {/* Arama kutusu */}
         <div className="relative">
           <input
             type="text"
@@ -71,7 +70,6 @@ const VirtualList: React.FC<VirtualListProps> = React.memo(({ items, itemHeight,
           </div>
         </div>
 
-        {/* Sanal liste */}
         <div
           ref={containerRef}
           style={{
@@ -82,9 +80,7 @@ const VirtualList: React.FC<VirtualListProps> = React.memo(({ items, itemHeight,
           }}
           onScroll={handleScroll}
         >
-          {/* Toplam yükseklik kadar bir container oluştur - scroll bar için */}
           <div style={{ height: totalHeight, position: 'relative' }}>
-            {/* Görünür öğeleri absolute position ile yerleştir */}
             <div
               style={{
                 position: 'absolute',

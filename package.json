@@ -9,12 +9,16 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.1.1",
     "@types/lodash": "^4.17.17",
+    "immer": "^10.1.1",
     "lodash": "^4.17.21",
     "next": "15.3.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "zustand": "^5.0.5"
+    "react-hook-form": "^7.57.0",
+    "zod": "^3.25.63",
+    "zustand": "^4.5.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
