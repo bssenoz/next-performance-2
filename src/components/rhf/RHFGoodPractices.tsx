@@ -1,37 +1,33 @@
 'use client'
 
-import React, { useMemo, useState } from 'react'
-import { useForm, useWatch } from 'react-hook-form'
-import debounce from 'lodash/debounce'
+import React, { useState } from 'react'
+import { useFormWithValidation } from '@/hooks/useFormWithValidation'
+
+interface FormValues {
+  email: string
+  firstName: string
+  lastName: string
+  type: string
+}
 
 export default function RHFGoodPractices() {
-  const [submittedData, setSubmittedData] = useState<any>(null)
-  const { register, control, handleSubmit } = useForm({
-    // ✅ İYİ: defaultValues memoize edilmiş
-    defaultValues: useMemo(() => ({
+  const [submittedData, setSubmittedData] = useState<FormValues | null>(null)
+  
+  const { 
+    register, 
+    handleSubmit, 
+    fullName,
+    debouncedValidation 
+  } = useFormWithValidation<FormValues>({
+    defaultValues: {
       email: '',
       firstName: '',
       lastName: '',
       type: ''
-    }), [])
+    }
   })
 
-  // ✅ İYİ: Tek useWatch ile tüm değerleri izleme
-  const values = useWatch({ control })
-  const fullName = useMemo(() => 
-    `${values.firstName} ${values.lastName}`,
-    [values.firstName, values.lastName]
-  )
-
-  // ✅ İYİ: Validation debounce edilmiş
-  const debouncedValidation = useMemo(
-    () => debounce(() => {
-      // validation logic
-    }, 300),
-    []
-  )
-
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: FormValues) => {
     setSubmittedData(data)
   }
 
@@ -40,7 +36,6 @@ export default function RHFGoodPractices() {
       <h2 className="text-xl font-bold">✅ İyi Kullanım Örnekleri</h2>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {/* ✅ İYİ: Uncontrolled input */}
         <div>
           <label>Email</label>
           <input 
@@ -69,12 +64,10 @@ export default function RHFGoodPractices() {
           />
         </div>
 
-        {/* ✅ İYİ: Memoize edilmiş değer kullanımı */}
         <div>
           Tam İsim: {fullName}
         </div>
 
-        {/* ✅ İYİ: Performanslı select kullanımı */}
         <div>
           <label>Tip</label>
           <select {...register("type")} className="border p-2 w-full">
